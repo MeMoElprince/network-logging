@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Network Logging",
+  "version": "0.1.0",
+  "description": "Capture WebSocket traffic and stream to local viewer.",
+  "permissions": ["storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Network Logging"
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Network Logging</title>
+    <style>
+      body { font: 13px/1.4 system-ui, sans-serif; width: 320px; padding: 12px; margin: 0; }
+      h1 { font-size: 14px; margin: 0 0 8px; }
+      label { display: block; font-weight: 600; margin: 8px 0 4px; }
+      input, textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+      textarea { height: 100px; font-family: ui-monospace, monospace; font-size: 12px; }
+      button { margin-top: 12px; padding: 6px 12px; font: inherit; cursor: pointer; }
+      .row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+      .dot.open { background: #2c2; }
+      .dot.closed { background: #c22; }
+      .hint { color: #666; font-size: 11px; margin-top: 4px; }
+      .status { font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Network Logging</h1>
+
+    <label for="relayUrl">Relay URL</label>
+    <input id="relayUrl" type="text" placeholder="ws://localhost:9999" />
+
+    <label for="patterns">Target URL patterns (one per line)</label>
+    <textarea id="patterns" placeholder="https://chatbot.example.com/*"></textarea>
+    <div class="hint">Match patterns must include a scheme, e.g. <code>https://*.example.com/*</code></div>
+
+    <button id="save">Save &amp; Reload</button>
+
+    <div class="row">
+      <span class="dot" id="dot"></span>
+      <span class="status" id="status">checking…</span>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
