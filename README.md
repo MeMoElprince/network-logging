@@ -1,6 +1,8 @@
 # Network Logging
 
-Live WebSocket frame viewer for debugging third-party chatbot pages. React+Vite+TS viewer, Chrome MV3 extension for auto-injection, Node `ws` relay.
+Live multi-transport network viewer for debugging third-party chatbot pages. Captures WebSocket frames, fetch, XHR, SSE, and WebRTC DataChannel traffic. React+Vite+TS viewer, Chrome MV3 extension for auto-injection, Node `ws` relay.
+
+See [CLAUDE.md](CLAUDE.md) for the contributor quickstart and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture and how to add a transport.
 
 ## Setup
 

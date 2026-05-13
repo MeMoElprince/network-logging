@@ -4,6 +4,7 @@ import { parseBody } from '../lib/parse';
 import { BodyTable } from './BodyTable';
 import { PrettyJson } from './PrettyJson';
 import type { CapturedEvent } from '../../../shared/protocol';
+import { transportLabel } from '../lib/transport';
 
 function fmtTime(ts: number) {
   const d = new Date(ts);
@@ -40,14 +41,18 @@ export function DetailPane() {
       <aside className="detail-pane">
         <header>
           <span className="dir life">◇ {lc.kind}</span>
+          <span className={`chip transport ${lc.transport ?? 'websocket'}`}>{transportLabel(lc.transport ?? 'websocket')}</span>
           <span className="ts">{fmtTime(lc.timestamp)}</span>
         </header>
         <table className="meta-table">
           <tbody>
-            <tr><th>socket</th><td>{lc.socketId.slice(0, 12)}…</td></tr>
+            <tr><th>conn</th><td>{lc.socketId.slice(0, 12)}…</td></tr>
             <tr><th>url</th><td className="mono">{lc.url}</td></tr>
             {lc.code != null && <tr><th>code</th><td>{lc.code}</td></tr>}
             {lc.reason && <tr><th>reason</th><td>{lc.reason}</td></tr>}
+            {lc.meta?.error && <tr><th>error</th><td>{lc.meta.error}</td></tr>}
+            {lc.meta?.method && <tr><th>method</th><td>{lc.meta.method}</td></tr>}
+            {lc.meta?.label && <tr><th>label</th><td>{lc.meta.label}</td></tr>}
           </tbody>
         </table>
       </aside>
@@ -62,18 +67,25 @@ function EventDetail({ event: e, view, setView }: { event: CapturedEvent; view: 
   const parsed = useMemo(() => parseBody(e.payload), [e.payload]);
   const bodyValue = parsed.kind === 'sio' ? parsed.value : parsed.kind === 'json' ? parsed.value : null;
 
+  const m = e.meta;
   return (
     <aside className="detail-pane">
       <header>
         <span className={`dir ${e.direction}`}>{e.direction === 'send' ? '▲ send' : '▼ recv'}</span>
+        <span className={`chip transport ${e.transport ?? 'websocket'}`}>{transportLabel(e.transport ?? 'websocket')}</span>
         <span className="ts">{fmtTime(e.timestamp)}</span>
         <span className="size">{fmtBytes(e.size)}{e.truncated ? ' (truncated)' : ''}</span>
       </header>
       <table className="meta-table">
         <tbody>
-          <tr><th>socket</th><td>{e.socketId.slice(0, 12)}…</td></tr>
+          <tr><th>conn</th><td>{e.socketId.slice(0, 12)}…</td></tr>
           <tr><th>url</th><td className="mono">{e.url}</td></tr>
           <tr><th>type</th><td>{e.payloadType}</td></tr>
+          {m?.method && <tr><th>method</th><td>{m.method}</td></tr>}
+          {m?.status != null && <tr><th>status</th><td>{m.status} {m.statusText ?? ''}</td></tr>}
+          {m?.eventName && <tr><th>event</th><td><span className="chip">{m.eventName}</span></td></tr>}
+          {m?.lastEventId && <tr><th>last-id</th><td>{m.lastEventId}</td></tr>}
+          {m?.label && <tr><th>label</th><td>{m.label}</td></tr>}
           {parsed.kind === 'sio' && (
             <>
               <tr><th>sio packet</th><td>{parsed.packetType}{parsed.namespace ? ` ns=${parsed.namespace}` : ''}{parsed.ackId ? ` ack=${parsed.ackId}` : ''}</td></tr>
@@ -82,6 +94,19 @@ function EventDetail({ event: e, view, setView }: { event: CapturedEvent; view: 
           )}
         </tbody>
       </table>
+
+      {m?.headers && Object.keys(m.headers).length > 0 && (
+        <details className="headers-block" open>
+          <summary>Headers ({Object.keys(m.headers).length})</summary>
+          <table className="meta-table headers">
+            <tbody>
+              {Object.entries(m.headers).map(([k, v]) => (
+                <tr key={k}><th>{k}</th><td className="mono">{v}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
 
       <div className="view-tabs">
         <button className={view === 'table' ? 'on' : ''} onClick={() => setView('table')} disabled={!bodyValue}>

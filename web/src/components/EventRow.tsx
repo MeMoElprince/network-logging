@@ -3,6 +3,7 @@ import type { LogEntry } from '../store';
 import { store, useStore } from '../store';
 import { parseBody } from '../lib/parse';
 import { pickHighlight, fmtHighlight, type Highlight } from '../lib/highlight';
+import { transportLabel } from '../lib/transport';
 
 function fmtTime(ts: number) {
   const d = new Date(ts);
@@ -46,6 +47,19 @@ function buildParts(payload: string): Parts {
     return { badge: null, highlight: pickHighlight(parsed.value), rawPreview: payload };
   }
   return { badge: null, highlight: null, rawPreview: payload };
+}
+
+function transportBadge(e: import('../../../shared/protocol').CapturedEvent): string | null {
+  const m = e.meta;
+  if (!m) return null;
+  if (e.transport === 'fetch' || e.transport === 'xhr') {
+    if (e.direction === 'send' && m.method) return m.method;
+    if (e.direction === 'recv' && m.status != null) return `${m.method ?? ''} ${m.status}`.trim();
+    return m.method ?? null;
+  }
+  if (e.transport === 'sse' && m.eventName) return m.eventName;
+  if (e.transport === 'webrtc' && m.label) return m.label;
+  return null;
 }
 
 export function EventRow({ entry }: { entry: LogEntry }) {
@@ -113,6 +127,8 @@ function DataRow({
   const e = entry.data;
   const parts = useMemo(() => buildParts(e.payload), [e.payload]);
   const arrow = e.direction === 'send' ? '▲' : '▼';
+  const tBadge = transportBadge(e);
+  const tLabel = transportLabel(e.transport ?? 'websocket');
 
   if (layout === 'compact') {
     let preview: string;
@@ -128,6 +144,8 @@ function DataRow({
         <span className="ts">{fmtTime(e.timestamp)}</span>
         <span className="dir">{arrow}</span>
         <span className="preview">
+          <span className={`chip transport ${e.transport ?? 'websocket'}`}>{tLabel}</span>
+          {tBadge && <span className="chip">{tBadge}</span>}
           {parts.badge && <span className="chip">{parts.badge}</span>}
           <span className="payload-preview">{preview}</span>
         </span>
@@ -141,7 +159,9 @@ function DataRow({
       <div className={`card ${e.direction} ${selected ? 'selected' : ''}`} onClick={onClick}>
         <div className="card-head">
           <span className="dir-tag">{arrow}</span>
-          {parts.badge ? <span className="chip">{parts.badge}</span> : <span className="chip muted">raw</span>}
+          <span className={`chip transport ${e.transport ?? 'websocket'}`}>{tLabel}</span>
+          {tBadge && <span className="chip">{tBadge}</span>}
+          {parts.badge ? <span className="chip">{parts.badge}</span> : !tBadge && <span className="chip muted">raw</span>}
           <span className="card-ts">{fmtTime(e.timestamp)}</span>
           <span className="card-size">{fmtBytes(e.size)}</span>
         </div>
@@ -166,7 +186,9 @@ function DataRow({
     <div className={`bubble-wrap ${e.direction}`}>
       <div className={`bubble ${e.direction} ${selected ? 'selected' : ''}`} onClick={onClick}>
         <div className="bubble-head">
-          {parts.badge ? <span className="chip">{parts.badge}</span> : <span className="chip muted">raw</span>}
+          <span className={`chip transport ${e.transport ?? 'websocket'}`}>{tLabel}</span>
+          {tBadge && <span className="chip">{tBadge}</span>}
+          {parts.badge ? <span className="chip">{parts.badge}</span> : !tBadge && <span className="chip muted">raw</span>}
           <span className="bubble-ts">{fmtTime(e.timestamp).slice(0, 12)}</span>
         </div>
         <div className="bubble-body">
