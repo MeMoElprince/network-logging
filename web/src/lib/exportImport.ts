@@ -1,11 +1,20 @@
 import { store, normalizeFilters, type Filters, type LogEntry } from '../store';
+import type { Transport } from '../../../shared/protocol';
+
+const EXPORT_VERSION = 2;
 
 type ExportFile = {
-  version: 1;
+  version: number;
   exportedAt: string;
   entries: LogEntry[];
   filters: Filters;
 };
+
+const VALID_TRANSPORTS: Transport[] = ['websocket', 'fetch', 'xhr', 'sse', 'webrtc'];
+
+function coerceTransport(v: unknown): Transport {
+  return VALID_TRANSPORTS.includes(v as Transport) ? (v as Transport) : 'websocket';
+}
 
 function pad(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
@@ -21,7 +30,7 @@ function filename(now: Date): string {
 export function exportState(): void {
   const s = store.get();
   const file: ExportFile = {
-    version: 1,
+    version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     entries: s.entries,
     filters: s.filters,
@@ -71,6 +80,13 @@ function validateEntry(e: unknown): e is LogEntry {
   return false;
 }
 
+function normalizeEntry(e: LogEntry): LogEntry {
+  if (e.kind === 'event') {
+    return { kind: 'event', data: { ...e.data, transport: coerceTransport(e.data.transport) } };
+  }
+  return { kind: 'lifecycle', data: { ...e.data, transport: coerceTransport(e.data.transport) } };
+}
+
 export async function importStateFromFile(
   file: File,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -92,7 +108,7 @@ export async function importStateFromFile(
     return { ok: false, error: 'file is not a JSON object' };
   }
   const obj = parsed as Record<string, unknown>;
-  if (obj.version !== 1) {
+  if (obj.version !== 1 && obj.version !== 2) {
     return { ok: false, error: `unsupported version: ${String(obj.version)}` };
   }
   if (!Array.isArray(obj.entries)) {
@@ -105,7 +121,7 @@ export async function importStateFromFile(
   }
 
   store.importState({
-    entries: obj.entries as LogEntry[],
+    entries: (obj.entries as LogEntry[]).map(normalizeEntry),
     filters: normalizeFilters(obj.filters),
   });
   return { ok: true };

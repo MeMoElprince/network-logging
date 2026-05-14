@@ -166,29 +166,35 @@ function CategoryChips({
   hideNoise: boolean;
   onEditNoise: () => void;
 }) {
-  const wsChips = category === 'all' || category === 'websocket';
+  const showDirChips = category !== 'sse';
+  const showSendChip = category !== 'sse';
+  const showLifeChip = category !== 'fetch' && category !== 'xhr';
   return (
     <div className="pills">
-      {wsChips && (
+      {showDirChips && (
         <>
-          <button
-            className={`pill send ${showSend ? 'on' : ''}`}
-            onClick={() => store.toggleDirection('send')}
-          >
-            ▲ send
-          </button>
+          {showSendChip && (
+            <button
+              className={`pill send ${showSend ? 'on' : ''}`}
+              onClick={() => store.toggleDirection('send')}
+            >
+              ▲ send
+            </button>
+          )}
           <button
             className={`pill recv ${showRecv ? 'on' : ''}`}
             onClick={() => store.toggleDirection('recv')}
           >
             ▼ recv
           </button>
-          <button
-            className={`pill life ${showLifecycle ? 'on' : ''}`}
-            onClick={() => store.toggleDirection('lifecycle')}
-          >
-            ◇ life
-          </button>
+          {showLifeChip && (
+            <button
+              className={`pill life ${showLifecycle ? 'on' : ''}`}
+              onClick={() => store.toggleDirection('lifecycle')}
+            >
+              ◇ life
+            </button>
+          )}
         </>
       )}
       <button className={`pill ${hideNoise ? 'on' : ''}`} onClick={() => store.toggleNoise()}>

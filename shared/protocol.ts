@@ -1,5 +1,18 @@
 export type Direction = 'send' | 'recv';
 
+export type Transport = 'websocket' | 'fetch' | 'xhr' | 'sse' | 'webrtc';
+
+export type EventMeta = {
+  method?: string;
+  status?: number;
+  statusText?: string;
+  headers?: Record<string, string>;
+  eventName?: string;
+  lastEventId?: string;
+  label?: string;
+  error?: string;
+};
+
 export type CapturedEvent = {
   id: string;
   socketId: string;
@@ -10,6 +23,8 @@ export type CapturedEvent = {
   payload: string;
   size: number;
   truncated?: boolean;
+  transport: Transport;
+  meta?: EventMeta;
 };
 
 export type SocketLifecycle = {
@@ -19,6 +34,8 @@ export type SocketLifecycle = {
   timestamp: number;
   code?: number;
   reason?: string;
+  transport: Transport;
+  meta?: EventMeta;
 };
 
 export type RelayMsg =

@@ -1,0 +1,1 @@
+{"root":["./src/background.ts","./src/content.ts","./src/inject.ts","./src/popup.ts","../shared/protocol.ts"],"version":"5.9.3"}
